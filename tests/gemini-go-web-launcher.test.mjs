@@ -45,7 +45,7 @@ class LauncherTests {
     Check(stage == 2, "success complete");
     bool opened = false, rejected = false;
     try { GeminiGoWebLauncher.Run(dir, shell, p => 9, p => opened = true); }
-    catch (InvalidOperationException) { rejected = true; }
+    catch (InvalidOperationException error) { rejected = true; Check(error.Message == "Gemini Go could not start. Check the logs; configuration was left unchanged.", "English startup error"); }
     Check(rejected && !opened, "startup failure must not open browser");
     rejected = false;
     try { GeminiGoWebLauncher.Run(dir, shell, delegate(ProcessStartInfo p) { throw new TimeoutException(); }, p => opened = true); }
@@ -53,7 +53,7 @@ class LauncherTests {
     Check(rejected && !opened, "unknown startup must not open browser");
     File.Delete(script); rejected = false;
     try { GeminiGoWebLauncher.Run(dir, shell, p => { throw new Exception("must not run"); }, p => opened = true); }
-    catch (FileNotFoundException) { rejected = true; }
+    catch (FileNotFoundException error) { rejected = true; Check(error.Message == "Start-Gemini-Go.ps1 was not found beside the executable.", "English missing-script error"); }
     Check(rejected && !opened, "missing launcher rejected before execution");
     string self = System.Reflection.Assembly.GetExecutingAssembly().Location;
     string pidFile = Path.Combine(dir, "fixture-child.pid");

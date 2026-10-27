@@ -1,37 +1,50 @@
-# Kết quả và giới hạn
+# Evidence and limitations
 
-Tổng hợp ngày 27/10/2026 từ receipts của pilot 24/10, source Jarvis `89468f1a3a7f423574bd6c57b03a0491a43fe0e6`. Kết quả lịch sử dưới đây không phải kiểm tra phiên/quota hiện tại.
+Prepared on October 27, 2026 from the October 24 pilot receipts at J.A.R.V.I.S Agents revision `89468f1a3a7f423574bd6c57b03a0491a43fe0e6`.
 
-## Kết quả lịch sử
+Historical results describe particular runs. They do not verify a current session, quota, or model entitlement.
 
-| Kiểm tra | Kết quả và phạm vi |
+## Historical results
+
+| Check | Observed result and scope |
 | --- | --- |
-| Account binding | Đã thử hai binding, xác minh danh tính trước import; transaction/readback và shared rotation có regression tests |
-| Single-tool Go / Go SSE / 9router SSE | Có lượt PASS: call hợp lệ, nonce được tạo sau call, final khớp, stop; reported model High |
-| OpenCode native read | Có lượt PASS: read completed, nonce khớp, final stop/session succeeded |
-| Multi-tool chat mới/cũ | Có lượt đủ 6 calls và file/final khớp, nhưng reported model trộn Argon/Flash; không tính High-only |
-| Chuỗi sau protocol fix | Có lượt premature final sau 4 calls, thiếu write/read và không tạo file dù client báo succeeded |
-| Bridge JSON | Vẫn có `envelope_json`; không đủ raw evidence để gán chắc nguyên nhân cho từng lỗi lịch sử |
-| Model guard cuối | Chặn explicit downgrade trước tool/output; hai pilot bị interrupt khi không có High result, không chứng minh chain đã đạt |
-| Context preflight | Payload vượt byte budget trả 400 trước upload/SSE; không tăng native window |
-| Go tests ở release cuối | Receipt lịch sử: 100 test/subtest PASS, exit 0; không phải 100 top-level tests |
-| Node relevant suite lịch sử | Receipt lịch sử: 63 PASS, exit 0; gồm tests phụ thuộc Jarvis không được đưa hết vào repo tách riêng |
+| Account binding | Two bindings exercised with identity verification before import; transaction/readback and shared rotation have regression tests |
+| Single-tool Go, Go SSE, and 9router SSE | Passing runs included a valid call, a nonce generated after the call, an exact final response, and stop; reported model High |
+| Native OpenCode read | Passing runs included a completed read, exact nonce, final stop, and session success |
+| Multi-tool chains in new and existing chats | Some runs completed six calls and matched file/final output, but reported models mixed Argon and Flash; not High-only acceptance |
+| Chain after the protocol fix | One run ended after four calls without the required write/read or output file, even though the client reported success |
+| Bridge JSON | `envelope_json` errors remained; available raw evidence could not establish a definite cause for every historical failure |
+| Final model guard | Explicit downgrades blocked before tool/output emission; two pilots interrupted without a High result, leaving chain acceptance unverified |
+| Context preflight | Oversized prompts returned HTTP 400 before upload/SSE; this did not increase the native context window |
+| Final Go release tests | Historical receipt: 100 test/subtest passes, exit 0; not 100 top-level test functions |
+| Relevant Node suite | Historical receipt: 63 passes, exit 0; included Jarvis-specific tests not all present in this standalone export |
 
-Source logic của guard nhận reported family Argon hoặc missing identity không đồng nghĩa đã chứng minh đúng mức High. Usage/counter local không phải native Google billing hay quota.
+Accepting a reported Argon family name, or an absent identity, does not prove the exact High tier. Local usage counters do not establish native Google quota or billing.
 
-## Trạng thái runtime
+## Runtime status
 
-Dự án runtime được người dùng **hủy ngày 26/10/2026**, không tự tiếp tục inference/nâng cấp. Xuất bản source ngày 27/10 không thay quyết định đó. Session expiry, reboot persistence, tự khôi phục đăng nhập, context 500k, độ ổn định multi-tool High-only và nghiệm thu đủ media vẫn **UNVERIFIED / NOT_ACCEPTED** theo từng ca.
+The owner **cancelled runtime development on October 26, 2026**. Source publication does not resume inference or upgrades.
 
-## Nguồn nội bộ dùng để tổng hợp
+The following remain **UNVERIFIED / NOT_ACCEPTED**, depending on the case:
 
-Các tên dưới đây là path trong repo Jarvis gốc; không sao chép nguyên log/account metadata sang repo này:
+- Reliable High-only multi-tool chains.
+- Session expiry and automatic login recovery.
+- Reboot persistence.
+- A real 500k-token backend context window.
+- Complete media acceptance.
+- Current account quota, availability, and model identity.
 
-- `docs/tooling/gemini-project-status.json` — quyết định hủy.
-- `docs/tooling/gemini-web2api-go-pilot-20261024.md` — baseline, binding và launcher.
-- `docs/tooling/argon-high-tool-acceptance-20261024.md` — single-tool roundtrip.
-- `docs/tooling/argon-context-fix-20261024.md` — byte budget và consumer launcher.
-- `docs/tooling/argon-bridge-chain-20261024.md` — latest chain failures/model guard.
-- `docs/tooling/opencode.md` — alias/config pilot 2.1.4.
+## Source receipts
 
-Kết quả kiểm tra lại cho **bản xuất này** được ghi riêng trong `docs/publication-checks.md`; không cộng với counts lịch sử.
+These are source paths in the original Jarvis repository, not relative links in this export. Raw logs and account metadata were excluded.
+
+| Original path | Role |
+| --- | --- |
+| `docs/tooling/gemini-project-status.json` | Cancellation decision |
+| `docs/tooling/gemini-web2api-go-pilot-20261024.md` | Baseline, binding, and launchers |
+| `docs/tooling/argon-high-tool-acceptance-20261024.md` | Single-tool round trips |
+| `docs/tooling/argon-context-fix-20261024.md` | Byte budget and client launcher |
+| `docs/tooling/argon-bridge-chain-20261024.md` | Latest chain failures and model guard |
+| `docs/tooling/opencode.md` | Pilot aliases and OpenCode 2.1.4 configuration |
+
+Fresh checks for this repository are recorded separately in [Publication checks](publication-checks.md). Historical and current counts are not combined.

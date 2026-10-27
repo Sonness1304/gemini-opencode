@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "sourceProject": "J.A.R.V.I.S Agents",
   "sourceRevision": "89468f1a3a7f423574bd6c57b03a0491a43fe0e6",
   "upstream": "https://github.com/zexadev/gemini-web2api-go",
@@ -26,5 +26,33 @@
     "tests/gemini-tool-roundtrip.test.mjs": "70e67cfa7eba24737ab92cf1f7468b2cbb4f8738f58095a5b06582647ae633a8",
     "tooling/gemini-session-go/patch.mjs": "9d689c6876099d8b3a0c33b73bbbce1d39339c368e1d962526a61ad7cf596f91",
     "tooling/gemini-session-go/source-hashes.json": "7f249de0c24fb80026d6f064aa471473649b34eb07c676697ffcd0b2221b9ef9"
+  },
+  "exportedFiles": {
+    "scripts/gemini-go-queue.mjs": "9d789909ab28eca444ec918e3e621101a5162a4e9bec802a4e767d96e8333241",
+    "scripts/gemini-go-web-launcher.cs": "b4bde2dbcf5274bc14f5bec74ab5f0bf79bd8e2b4a099135a38796d885abe113",
+    "scripts/gemini-session-go/account_binding.go": "e65c06e5d313cbc3f31c24ff02e4ed0b5bfeb15830bb49c07ce9445cc970a2d3",
+    "scripts/gemini-session-go/account_binding_store.go": "be65758472440d2d13b0c238f693395c12e550bb09691c3625d9bac4d24ccf66",
+    "scripts/gemini-session-go/account_binding_store_test.go": "9855d28b05540dbeb4ba211472286aaef7fd4c6765f313c696a20a36b5fbeefd",
+    "scripts/gemini-session-go/account_binding_test.go": "05d6e2af12e61baefddc2b5f045a41b86b48e7d72938945e0e1567045ae13ab4",
+    "scripts/gemini-session-go/action_bridge.go": "3e7755de397fe47e837b86440b5d344118a710e8cb598230b19c55586a83deba",
+    "scripts/gemini-session-go/action_bridge_test.go": "290f3a821d3d279f4b3f7afcf393141362c9085a9653c154650536f94b5aa2e0",
+    "scripts/gemini-session-go/context_budget.go": "473168639a2df06208483f12e3228e22215548461db110623b4d223a9f6db81e",
+    "scripts/gemini-session-go/context_budget_test.go": "14be35ed6b15a92d9104b4a3475018cd5c4146c43323eed63c1fb4f9cc0713df",
+    "scripts/pilot-gemini-tool-roundtrip.mjs": "dce028a2c2dfd54f41499066b32df4837831b43e04dc9e6c49de4aa709a91829",
+    "scripts/start-gemini-go-queue.ps1": "5b4d3458a3a8c2d03984bf5f2abfbd5a47e49484cb77c000820d33efe59c8961",
+    "scripts/start-gemini-go.ps1": "4a1ed06bb6fb6b5147f54cf06c4210a5838562fd28cf8f05fa8ee87aaeae1504",
+    "scripts/test-gemini-session.ps1": "d8d7d884494d2c9d3f64d2c43709eedcace71fdb31b0f764dbf0032e26ae1941",
+    "tests/gemini-go-queue.test.mjs": "fa4b5ac0d8f204239d8633e0a6ba8f70925e9c6d682ecfd1415257af2611b2fb",
+    "tests/gemini-go-web-launcher.test.mjs": "ef2479cbd9d5465c2e13a8c276c1ff717992c2ecb3246ae930f582bb00907d38",
+    "tests/gemini-session-launcher.test.mjs": "d191c5fb0f679b6f0ff7e2dd8d74ddb38654f4a7fd85135f80e3281285141776",
+    "tests/gemini-tool-roundtrip.test.mjs": "70e67cfa7eba24737ab92cf1f7468b2cbb4f8738f58095a5b06582647ae633a8",
+    "tooling/gemini-session-go/patch.mjs": "35abd6d4c00018bfeafd8886225090cd516c5a48e1ed41bd2d93530510b84749",
+    "tooling/gemini-session-go/source-hashes.json": "7f249de0c24fb80026d6f064aa471473649b34eb07c676697ffcd0b2221b9ef9"
+  },
+  "localModifications": {
+    "scripts/gemini-go-web-launcher.cs": "Translate user-facing errors to English; process behavior unchanged.",
+    "tests/gemini-go-web-launcher.test.mjs": "Assert English missing-script and startup-failure messages.",
+    "scripts/gemini-session-go/context_budget_test.go": "Represent the same multibyte test character using a Go Unicode escape.",
+    "tooling/gemini-session-go/patch.mjs": "Preserve exact upstream anchors with Unicode escapes and translate inserted comments to English."
   }
 }

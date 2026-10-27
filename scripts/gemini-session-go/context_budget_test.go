@@ -21,7 +21,7 @@ func TestArgonContextBudgetUsesConfiguredUTF8Bytes(t *testing.T) {
 		if err := checkArgonContext(strings.Repeat("x", 128001), Models[name]); err == nil {
 			t.Fatal("oversized context allowed attachment fallback")
 		}
-		if err := checkArgonContext(strings.Repeat("ế", 43000), Models[name]); err == nil {
+		if err := checkArgonContext(strings.Repeat("\u1ebf", 43000), Models[name]); err == nil {
 			t.Fatal("counted characters rather than UTF8 bytes")
 		}
 	}

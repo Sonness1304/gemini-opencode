@@ -46,7 +46,8 @@ edit('gemini.go','var acct *CookieAccount','var binding accountBinding\n var acc
 edit('gemini.go','var files []fileRef','if err:=checkArgonContext(prompt,mc);err!=nil{return &StreamResult{},err}\n defer holdBindingSession()()\n var files []fileRef');
 edit('gemini.go','func probeGemini(prompt, proxyURL string) ProbeResult {','func probeGemini(prompt, proxyURL string) ProbeResult {\n defer holdBindingSession()()');
 edit('gemini.go','tok, err := getXSRF(acct.Cookie, proxyURL)','binding=acct.Binding\n tok, err := getXSRF(acct.Cookie, proxyURL,binding)');
-edit('gemini.go','// 取不到 SNlM0e', 'if strings.HasPrefix(err.Error(),"binding_") {return attrib(err)}\n if binding.bound() {return attrib(fmt.Errorf("binding_session_refresh_required"))}\n // 取不到 SNlM0e');
+// Preserve exact upstream anchors with escapes; inserted comments are English.
+edit('gemini.go','// \u53d6\u4e0d\u5230 SNlM0e', 'if strings.HasPrefix(err.Error(),"binding_") {return attrib(err)}\n if binding.bound() {return attrib(fmt.Errorf("binding_session_refresh_required"))}\n // Could not obtain SNlM0e');
 edit('gemini.go','getXSRF(fresh.Cookie, proxyURL)','getXSRF(fresh.Cookie, proxyURL,fresh.Binding)');
 edit('gemini.go','uploadBytes(cookieStr, proxyURL, u.Data, u.Name)','uploadBytes(cookieStr, proxyURL, u.Data, u.Name,binding)');
 edit('gemini.go','prepareContextFile(prompt, latest, budget, cookieStr, proxyURL)','prepareContextFile(prompt, latest, budget, cookieStr, proxyURL,binding)');
@@ -67,12 +68,12 @@ edit('gemini.go','fetchMediaArtifacts(mc.Tool, res.Raw, cid, cookieStr, sapisid,
 edit('gemini.go','cookieStr, sapisid := loadCookie()','cookieStr, sapisid,binding := loadBoundCookie()');
 edit('gemini.go','if tok, e := getXSRF(cookieStr, proxyURL,binding); e == nil && tok != "" {','if bindingsEnabled() && !binding.bound(){res.Status="binding_unavailable";res.Diagnostic="No eligible bound account";return res}\n if tok,e:=getXSRF(cookieStr,proxyURL,binding);e!=nil && binding.bound(){res.Status="binding_unavailable";res.Diagnostic="Selected account identity/session unavailable";return res}else if e==nil && tok!="" {');
 edit('gemini.go','func anonFirstEligible(mc ModelConfig, hasAttachment bool) bool {','func anonFirstEligible(mc ModelConfig, hasAttachment bool) bool {\n if bindingsEnabled(){return false}');
-edit('gemini.go','// 通过限流器拿一个 slot','if bindingsEnabled() && (acct==nil || !acct.Binding.bound()){return attrib(fmt.Errorf("binding_no_eligible_account"))}\n // 通过限流器拿一个 slot');
+edit('gemini.go','// \u901a\u8fc7\u9650\u6d41\u5668\u62ff\u4e00\u4e2a slot','if bindingsEnabled() && (acct==nil || !acct.Binding.bound()){return attrib(fmt.Errorf("binding_no_eligible_account"))}\n // Acquire a rate-limiter slot');
 edit('gemini.go','buildGeminiHeaders(cookieStr, sapisid, probeModel.HexID)','buildGeminiHeaders(cookieStr, sapisid, probeModel.HexID,binding)');
 edit('gemini.go','func doGeminiRequest(endpoint, body string, headers map[string]string, proxyURL string,','func doGeminiRequest(endpoint, body string, headers map[string]string, proxyURL string,');
 // Set authuser on all Gemini RPC URLs from the already-selected outbound header.
 edit('gemini.go','sendAt := time.Now()','endpoint=bindingEndpointFromHeaders(endpoint,headers)\n sendAt := time.Now()');
-edit('gemini.go','// 复用主流程同款 client','endpoint=bindingEndpoint(endpoint,binding)\n // 复用主流程同款 client');
+edit('gemini.go','// \u590d\u7528\u4e3b\u6d41\u7a0b\u540c\u6b3e client','endpoint=bindingEndpoint(endpoint,binding)\n // Reuse the main request client');
 
 edit('client.go','func loadCookie() (cookie, sapisid string) {','func loadCookie() (cookie, sapisid string) {\n cookie,sapisid,_=loadBoundCookie();return\n}\nfunc loadBoundCookie() (cookie,sapisid string,binding accountBinding) {');
 edit('client.go','return a.Cookie, extractSAPISID(a.Cookie)','return a.Cookie, extractSAPISID(a.Cookie),a.Binding');

@@ -1,49 +1,108 @@
-# Gemini qua OpenCode
+<div align="center">
 
-Bản tổng hợp mã nguồn và kết quả thử nghiệm tích hợp Gemini Web vào OpenCode CLI/Desktop, tách từ J.A.R.V.I.S Agents ngày **27/10/2026**.
+# Gemini × OpenCode
 
-**Trạng thái: lưu trữ thử nghiệm.** Người dùng hủy dự án runtime ngày 26/10/2026; lần xuất bản này chỉ đóng gói mã nguồn, không khởi động lại dịch vụ. Đây là adapter Gemini Web2API Go, không phải Google Gemini CLI chính thức. Các tên model dưới đây là alias của pilot, không xác nhận tên sản phẩm hay quyền truy cập hiện tại của Google.
+**Explore Gemini Web tool calling from OpenCode.**
+
+A pinned Go adapter, a bounded request queue, and reproducible tests for developers investigating the boundary between web chat and local coding tools.
+
+[![CI](https://github.com/Sonness1304/gemini-opencode/actions/workflows/tests.yml/badge.svg)](https://github.com/Sonness1304/gemini-opencode/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](LICENSE)
+[![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933?logo=node.js&logoColor=white)](package.json)
+[![Status: experimental archive](https://img.shields.io/badge/status-experimental_archive-orange)](docs/evidence.md)
+
+[Quick start](#quick-start) · [Setup guide](docs/setup.md) · [Architecture](docs/architecture.md) · [Results](docs/evidence.md) · [Troubleshooting](docs/troubleshooting.md)
+
+</div>
+
+---
+
+## What is this?
+
+Gemini × OpenCode connects **OpenCode CLI/Desktop** to a patched **Gemini Web2API Go** backend through a local **9router** gateway and request queue. The bridge converts a validated JSON action plan into tool calls that OpenCode can execute.
+
+This repository collects the adapter source, patch recipe, Windows launcher references, and tests from the J.A.R.V.I.S Agents pilot. It is intended for developers studying tool emulation, account binding, streaming, and context limits.
+
+> **Project status:** experimental source archive. Runtime development was cancelled on October 26, 2026. Publishing this repository does not restart that work. This is a Gemini **Web** adapter, not Google's official Gemini CLI. Pilot model names are routing aliases, not a promise of current Google availability.
+
+## Why explore it?
+
+| Area | What you can inspect |
+| --- | --- |
+| **Tool-call bridge** | JSON plan validation, tool selection, argument checks, tool-result correlation, and final-answer handling |
+| **Account binding** | Identity checks carried through tokens, headers, RPCs, uploads, conversations, and media |
+| **Request queue** | Bounded concurrency, cancellation, deadlines, and explicit refusal handling |
+| **Context preflight** | A UTF-8 byte budget checked before uploads or streaming begin |
+| **Model identity** | A guard against explicitly reported model downgrades before output is emitted |
+| **Reproducible patches** | An exact upstream revision and 62 source-file hashes checked before any patch is written |
+
+## How it fits together
 
 ```mermaid
 flowchart LR
-  O[OpenCode CLI / Desktop] --> R[9router · 127.0.0.1:20128]
-  R --> Q[Queue · 127.0.0.1:20832]
-  Q --> G[Gemini Web2API Go · 127.0.0.1:20831]
-  G --> W[Gemini Web]
+  O["OpenCode CLI / Desktop"] --> R["9router<br/>127.0.0.1:20128"]
+  R --> Q["Request queue<br/>127.0.0.1:20832"]
+  Q --> G["Patched Gemini Web2API Go<br/>127.0.0.1:20831"]
+  G --> W["Gemini Web"]
 ```
 
-## Phần đã làm
+The Go bridge proposes structured actions. **OpenCode owns tool execution and permissions.** The queue forwards requests; it never executes model-generated commands.
 
-- Binding danh tính tài khoản xuyên XSRF, header, RPC, upload, conversation và media; import có kiểm tra danh tính, transaction và operation ID.
-- Bridge Argon High chuyển JSON action plan thành OpenAI-compatible tool calls; kiểm tên tool, arguments, tool choice và kết quả. OpenCode thực thi tool theo quyền của chính client.
-- Chặn prompt Argon vượt byte budget trước upload/SSE; trả `context_length_exceeded` thay vì ngầm cắt nội dung.
-- Chặn reported model khác family Argon trước khi phát nội dung/reasoning ở High+tools.
-- Queue tối đa 8 active / 32 waiting; không replay request có kết quả chưa rõ. Chỉ chờ lại khi Go từ chối rõ vì hết concurrent slot trước generation.
-- Launchers Windows kiểm hash, listener và process ownership; giữ secret trong tiến trình, không đóng gói credential.
+## Quick start
 
-## Đọc và kiểm tra
+Start with the local test suite. It requires **Node.js 22+**, no npm dependencies, and no Google credentials.
 
-- [Cách dựng và nối OpenCode](docs/setup.md).
-- [Kết quả thử nghiệm, lỗi và giới hạn](docs/evidence.md).
-- [Cấu hình OpenCode mẫu](examples/opencode.example.json): bốn alias chat của pilot, không bật quyền công cụ toàn cục.
-- [Nguồn và giấy phép](THIRD_PARTY_NOTICES.md), [manifest nguồn](source-manifest.json).
-
-Node.js 22+ chạy được bộ kiểm thử queue/protocol/preflight không gọi Google:
-
-```powershell
+```bash
+git clone https://github.com/Sonness1304/gemini-opencode.git
+cd gemini-opencode
 npm test
 ```
 
-Windows có PowerShell 7 và compiler .NET Framework chạy thêm fixture launcher:
+On Windows with PowerShell 7 and the .NET Framework C# compiler:
 
 ```powershell
 npm run test:windows
 ```
 
-Các Go files trong `scripts/gemini-session-go/` là patch cho upstream, không phải Go module độc lập. Quy trình build nằm trong hướng dẫn. Repo không kèm Go binary, 9router, OpenCode, database, cookies, API keys, account mapping thật hay lịch sử chat.
+**To rebuild the adapter and connect OpenCode**, follow the [setup guide](docs/setup.md). The Go files here are patches for a pinned upstream application, not a standalone Go module. The repository does not include an installer or configured gateway.
 
-## Mức độ đã chứng minh
+## What has been verified?
 
-Pilot 24/10 đã có các vòng tool đơn đi hết Go → 9router → OpenCode và nonce khớp. Chuỗi nhiều tool có cả lần đạt lẫn premature final, malformed JSON và upstream hạ model; **High-only multi-tool chưa được nghiệm thu**. Metadata context 500k/output 65536 trong cấu hình lịch sử không chứng minh backend nhận được từng đó token. Prompt cap 128000 là **UTF-8 bytes của prompt đã serialize**, không phải 128k token.
+| Check | Result | Scope |
+| --- | --- | --- |
+| Queue, protocol, preflight, and repository integrity tests | **14 passed** | Local fixtures; no live model calls |
+| Windows launcher tests | **2 passed** | Mocked startup/browser callbacks |
+| Patched Go test suite | **100 test/subtest passes** | One live upload probe skipped; see [verification record](docs/publication-checks.md) |
+| Patched Go build | **Passed** | Go 1.26.8 on Windows |
+| Historical single-tool round trip | **Observed passing runs** | Tool call → newly generated nonce → exact final answer |
+| High-only multi-tool chains | **Not accepted** | Mixed model reports, premature finals, and malformed replies remain |
 
-Không dùng kết quả unit test hoặc HTTP 200 để khẳng định chất lượng model, quota, billing, độ ổn định hay phiên đăng nhập hiện tại.
+These are separate checks, not a combined benchmark. The [evidence guide](docs/evidence.md) includes failures and explains what each result proves.
+
+## Know the limits
+
+- Tool calling is **prompt-based emulation**, not Google's native function-calling API.
+- HTTP 200 or an OpenCode `succeeded` status does not prove that a requested file was written or a tool chain completed.
+- A historical `500000` context setting is client metadata. The pilot's `128000` prompt cap counts **UTF-8 bytes of the serialized prompt**, not tokens.
+- Account login, quota, session expiry, reboot recovery, and media support require their own live verification.
+- The repository contains no credentials, account database, browser session, chat history, or prebuilt executable.
+
+## Documentation
+
+| Guide | Start here when you want to… |
+| --- | --- |
+| [Setup](docs/setup.md) | Rebuild the pinned Go application and configure the local chain |
+| [Architecture](docs/architecture.md) | Understand the adapter, queue, and execution boundaries |
+| [Troubleshooting and FAQ](docs/troubleshooting.md) | Investigate context errors, model mismatches, or incomplete tool chains |
+| [Evidence](docs/evidence.md) | Review historical results and unresolved limitations |
+| [Publication checks](docs/publication-checks.md) | Inspect the exact checks performed for this export |
+| [Contributing](CONTRIBUTING.md) | Propose a focused improvement with reproducible evidence |
+| [Source and licensing](THIRD_PARTY_NOTICES.md) | Trace upstream revisions, original files, and local edits |
+
+## Explore or contribute
+
+Run the tests, read the bridge, and compare its contracts with your own client. Useful contributions include small reproductions of protocol failures, clearer setup instructions, and tests that catch false success reports. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
+## License
+
+[MIT](LICENSE). Upstream copyright and license notices are preserved in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

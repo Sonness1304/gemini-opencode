@@ -1,61 +1,129 @@
-# Dựng bản pilot và nối OpenCode
+# Setup guide
 
-Đây là quy trình tái dựng để tham khảo, chưa là bộ cài tự động. Việc xuất repo không thực hiện các bước chạy dịch vụ/inference bên dưới.
+This guide reconstructs the experimental pilot. It is a manual reference, not an installer. Start with the offline tests before attempting a live configuration.
 
-## Dựng Go với patch đã pin
+## 1. Check prerequisites
 
-1. Chuẩn bị Node.js 22+ và Go 1.26.8. Tải ZIP source tại [commit upstream đã pin](https://github.com/zexadev/gemini-web2api-go/archive/64b2d2c549c37b91f4c3dcbacaa720f604eb69e1.zip), giải nén thành một thư mục sạch ngoài repo. Không dùng git clone hoặc ZIP phiên bản khác: recipe kiểm exact file list/hash trước ghi.
-2. Từ root repo này, chạy trong PowerShell; thay đường dẫn source bằng thư mục vừa giải nén:
+| Component | Required for |
+| --- | --- |
+| Node.js 22+ | Tests, patch recipe, and request queue |
+| Go 1.26.8 | Rebuilding and testing the pinned upstream application |
+| PowerShell 7 | Optional Windows launcher fixtures |
+| .NET Framework C# compiler | Optional Windows web-launcher fixture |
+| OpenCode | Client; configuration was tested with pilot version 2.1.4 |
+| 9router | Local gateway; configure it separately |
+| An authorized Gemini Web session | Live use only; never needed by the offline Node tests |
+
+No `npm install` is needed: the Node scripts use built-in modules.
+
+## 2. Run the local tests
+
+From this repository:
+
+```bash
+npm test
+```
+
+On Windows with the optional prerequisites:
+
+```powershell
+npm run test:windows
+```
+
+These tests use synthetic fixtures and do not log in to Google or call a model.
+
+## 3. Rebuild the pinned Go application
+
+Download the [pinned source ZIP](https://github.com/zexadev/gemini-web2api-go/archive/64b2d2c549c37b91f4c3dcbacaa720f604eb69e1.zip) and extract it into a new, clean directory outside this repository.
+
+The recipe requires the exact archive file list and SHA-256 values. Do not substitute a newer release, a previously patched directory, or a Git clone containing extra files.
+
+From this repository, run the following PowerShell command, replacing the source path with your extracted directory:
 
 ```powershell
 node tooling/gemini-session-go/patch.mjs C:/AI/build/gemini-web2api-go-64b2d2c549c37b91f4c3dcbacaa720f604eb69e1
 ```
 
-3. Tại thư mục source đã patch, chạy:
+Then, from the patched upstream directory:
 
 ```powershell
 go test ./... -count=1
 go build -trimpath -buildvcs=false -ldflags '-s -w' -o Gemini-Web2API-Go.exe .
 ```
 
-Recipe chỉ chạy một lần trên source sạch. Muốn dựng lại, giải nén lại ZIP vào thư mục mới; không xóa bản đang dùng để ép recipe chạy.
+The recipe runs once against clean source. To repeat a build, extract the archive into another new directory. Keep the existing runtime and its data intact.
 
-## Runtime và thông số lịch sử
+## 4. Configure the local services
 
-| Thành phần | Địa chỉ / giá trị pilot |
+The pilot used these settings:
+
+| Component | Address or setting |
 | --- | --- |
-| Go | `127.0.0.1:20831`; admin `/admin/` |
-| Queue | `127.0.0.1:20832`; upstream cố định `127.0.0.1:20831` |
+| Go API and admin | `127.0.0.1:20831`; admin at `/admin/` |
+| Request queue | `127.0.0.1:20832`; fixed upstream `127.0.0.1:20831` |
 | 9router | `127.0.0.1:20128/v1` |
-| Queue | 8 active, 32 waiting, chờ 120 giây, request 240 giây |
-| Go | concurrent 8, RPM 30, RPH 80, timeout 240 giây, max prompt 128000 bytes |
-| OpenCode provider | timeout 420000 ms, header timeout 390000 ms |
+| Queue capacity | 8 active requests, 32 waiting |
+| Queue deadlines | 120 seconds waiting, 240 seconds per active request |
+| Go pilot limits | Concurrent 8, RPM 30, RPH 80, timeout 240 seconds |
+| Argon prompt cap | 128000 UTF-8 bytes of serialized prompt |
+| OpenCode timeouts | 420000 ms provider timeout; 390000 ms header timeout |
 
-9router phải có provider OpenAI-compatible prefix `jgopilot` trỏ đến queue `http://127.0.0.1:20832/v1`. Key dùng với queue phải khớp key Go. Gateway key của OpenCode là credential riêng của 9router. Không đưa key vào Git, command arguments hoặc ảnh chụp cấu hình. Provider setup và đăng nhập Google thực hiện riêng ở máy người dùng; bản xuất không kèm credential hay tự khôi phục phiên.
+Configure Go using the pinned upstream application's documentation and your own authorized session. Keep secrets and account data outside this repository.
 
-Sau khi Go đã được cấu hình và đang chạy, queue có thể chạy bằng `node scripts/gemini-go-queue.mjs`. Script chỉ lấy key từ local admin Go trong tiến trình. Nó không tạo provider hoặc đăng nhập Google.
+Configure a 9router OpenAI-compatible provider with the prefix `jgopilot`, pointing to:
 
-## OpenCode
+```text
+http://127.0.0.1:20832/v1
+```
 
-`examples/opencode.example.json` được rút từ schema **OpenCode 2.1.4 của pilot**. Sao chép và hợp nhất vào project của bạn, giữ các provider/config đang có. Đây không là cấu hình của Google Gemini CLI.
+The key sent from 9router to the queue must match the Go key. The gateway key used by OpenCode is a separate 9router credential. Do not place either key in Git, shell arguments, screenshots, or issue reports.
 
-Key được tham chiếu qua biến môi trường `JARVIS_GATEWAY_KEY`. Cấp giá trị qua cơ chế quản lý secret của máy, không chép vào file mẫu. Chọn alias `jarvis/gemini-web-argon-thinking` hoặc một trong ba model chat còn lại. Ví dụ lệnh cho client pilot:
+Once Go is configured and running, start the queue from this repository:
+
+```bash
+node scripts/gemini-go-queue.mjs
+```
+
+The script obtains the key from the local Go admin endpoint in memory. It does not create a provider or establish a Google login session. Binding configuration also requires the pilot's authenticated admin/session interface; this export does not automatically enroll accounts.
+
+## 5. Connect OpenCode
+
+Merge [examples/opencode.example.json](../examples/opencode.example.json) into your project configuration, preserving your existing providers and settings.
+
+Supply `JARVIS_GATEWAY_KEY` through your local secret-management mechanism. The example references the variable and contains no key value.
+
+| OpenCode model alias | Gateway route |
+| --- | --- |
+| `jarvis/gemini-web-pro` | `jgopilot/gemini-3.1-pro` |
+| `jarvis/gemini-web-pro-thinking` | `jgopilot/gemini-3.1-pro-thinking` |
+| `jarvis/gemini-web-argon` | `jgopilot/gemini-4-argon-thinking-medium` |
+| `jarvis/gemini-web-argon-thinking` | `jgopilot/gemini-4-argon-thinking` |
+
+These are historical pilot aliases. Check your actual gateway catalog before selecting one. They do not establish upstream model identity or current availability.
+
+For the pilot client:
 
 ```powershell
 opencode run --model jarvis/gemini-web-argon-thinking --format json
 ```
 
-Truyền prompt theo cách được client hỗ trợ; kiểm `opencode --version` và `opencode run --help` trước khi dùng với bản khác. Không thêm `--auto` hoặc rule allow-all chỉ để làm theo ví dụ. Tool calling vẫn là emulation; OpenCode chịu trách nhiệm quyền và triển khai công cụ.
+Provide a prompt using your client's supported input method. Check `opencode --version` and `opencode run --help` when using another release. The example does not require `--auto` or a global allow-all tool rule.
 
-Canvas/Image/Music/Video từng có alias, nhưng không nằm trong mẫu chat này: chúng trả media/HTML dưới text và chưa được nghiệm thu đủ cả bốn chức năng.
+The historical Canvas/Image/Music/Video routes are excluded from the chat example. They returned media or HTML inside text content and were not fully accepted as four working media features.
 
-## Launcher Windows giữ để tham khảo
+## Optional Windows launcher references
 
-- `start-gemini-go.ps1` cần đặt cạnh binary trong `C:\AI`; config/DB ở `%LOCALAPPDATA%\Jarvis\gemini-web2api-go-pilot`. Script giữ expected SHA-256 của binary đã build ngày 24/10. Binary tự build có thể khác hash: phải xác minh source/build rồi chỉnh pin tại bản riêng; không bỏ kiểm tra hash.
-- `start-gemini-go-queue.ps1` kiểm ownership listener, không chiếm port của ứng dụng khác. `test-gemini-session.ps1` chỉ kiểm phiên và ghi trạng thái local, không gọi generation.
-- `gemini-go-web-launcher.cs` là source launcher lịch sử: mở admin bằng URL handler mặc định. **Không dùng launcher này để bàn giao trình duyệt trong môi trường yêu cầu profile Chrome cụ thể.** Khi cần dùng trang admin, mở bằng Chrome profile đã xác minh từ metadata/UI; bản tổng hợp không thay browser settings hay tạo shortcut.
-- Launcher không phải installer: không tự tạo DB/config/account bindings, không nhập password/cookie, không phân phối binary.
+- Place `start-gemini-go.ps1` beside the Go binary in `C:\AI`. Configuration and data are expected under `%LOCALAPPDATA%\Jarvis\gemini-web2api-go-pilot`.
+- The startup script checks the historical binary SHA-256. A source build can produce a different executable hash. Verify the source and build before updating your local pin; keep the hash check.
+- `start-gemini-go-queue.ps1` verifies listener ownership and does not take over another application's port.
+- `test-gemini-session.ps1` checks session status without generation.
+- The historical C# web launcher opens admin through the OS URL handler. If a specific Chrome profile is required, open the admin URL using that verified profile instead.
+- These scripts are not installers. They do not create a configuration, database, account binding, or Google login.
 
-## Diagnostic có gọi model
+## Optional live diagnostic
 
-`pilot-gemini-tool-roundtrip.mjs` có thể gọi model thật qua `go` hoặc `9router`; không nằm trong `npm test`. Chỉ chạy khi chủ máy chủ động giao inference và cấp key trong env (`GEMINI_TOOL_PILOT_KEY` hoặc `JARVIS_GATEWAY_KEY`). Nó xác nhận tool-call → nonce random sinh sau call → final exact; HTTP 200 đơn lẻ không đủ PASS.
+`scripts/pilot-gemini-tool-roundtrip.mjs` calls a real model through `go` or `9router`. It is excluded from `npm test`.
+
+Run it only when live inference is intended and a process-scoped key has been supplied through `GEMINI_TOOL_PILOT_KEY` or `JARVIS_GATEWAY_KEY`. It requires a valid tool call, generates a random nonce after that call, and checks the exact final answer. HTTP 200 alone cannot pass the diagnostic.
+
+For common errors, see [Troubleshooting](troubleshooting.md).

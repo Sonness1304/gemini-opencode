@@ -24,8 +24,8 @@ public static class GeminiGoWebLauncher
     public static void Run(string directory, string shell, Func<ProcessStartInfo, int> startServer, Action<ProcessStartInfo> openBrowser)
     {
         string script = Path.Combine(directory, "Start-Gemini-Go.ps1");
-        if (!File.Exists(script)) throw new FileNotFoundException("Khong tim thay Start-Gemini-Go.ps1 canh EXE.");
-        if (!File.Exists(shell)) throw new FileNotFoundException("Khong tim thay PowerShell 7.");
+        if (!File.Exists(script)) throw new FileNotFoundException("Start-Gemini-Go.ps1 was not found beside the executable.");
+        if (!File.Exists(shell)) throw new FileNotFoundException("PowerShell 7 was not found.");
         var startup = new ProcessStartInfo(shell, "-NoLogo -NoProfile -NonInteractive -File \"" + script + "\"")
         {
             WorkingDirectory = directory,
@@ -34,7 +34,7 @@ public static class GeminiGoWebLauncher
             RedirectStandardOutput = true,
             RedirectStandardError = true
         };
-        if (startServer(startup) != 0) throw new InvalidOperationException("Khong bat duoc Gemini Go. Kiem tra log; cau hinh duoc giu nguyen.");
+        if (startServer(startup) != 0) throw new InvalidOperationException("Gemini Go could not start. Check the logs; configuration was left unchanged.");
         openBrowser(new ProcessStartInfo("http://127.0.0.1:20831/admin/") { UseShellExecute = true });
     }
 
@@ -45,11 +45,11 @@ public static class GeminiGoWebLauncher
             // Drain both pipes without retaining startup output or possible credentials.
             process.OutputDataReceived += delegate { };
             process.ErrorDataReceived += delegate { };
-            if (!process.Start()) throw new InvalidOperationException("Khong chay duoc launcher Gemini Go.");
+            if (!process.Start()) throw new InvalidOperationException("The Gemini Go launcher could not start.");
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             if (!process.WaitForExit(45000))
-                throw new TimeoutException("Chua xac nhan Go khoi dong sau 45 giay. Kiem tra log truoc khi thu lai.");
+                throw new TimeoutException("Go startup was not confirmed within 45 seconds. Check the logs before trying again.");
             // A background server can inherit the pipes after the startup shell exits.
             process.CancelOutputRead();
             process.CancelErrorRead();
