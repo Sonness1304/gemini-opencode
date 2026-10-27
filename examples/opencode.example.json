@@ -1,0 +1,97 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "jarvis/gemini-web-pro",
+  "providers": {
+    "jarvis": {
+      "name": "Gemini via local 9router",
+      "env": [
+        "JARVIS_GATEWAY_KEY"
+      ],
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://127.0.0.1:20128/v1",
+        "apiKey": "{env:JARVIS_GATEWAY_KEY}",
+        "headerTimeout": 390000,
+        "timeout": 420000
+      },
+      "models": {
+        "gemini-web-pro": {
+          "modelID": "jgopilot/gemini-3.1-pro",
+          "name": "Gemini 3.1 Pro",
+          "package": "@opencode/ai/providers/openai-compatible",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 500000,
+            "output": 65536
+          }
+        },
+        "gemini-web-pro-thinking": {
+          "modelID": "jgopilot/gemini-3.1-pro-thinking",
+          "name": "Gemini 3.1 Pro Thinking",
+          "package": "@opencode/ai/providers/openai-compatible",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 500000,
+            "output": 65536
+          }
+        },
+        "gemini-web-argon": {
+          "modelID": "jgopilot/gemini-4-argon-thinking-medium",
+          "name": "Gemini 4 Argon Medium",
+          "package": "@opencode/ai/providers/openai-compatible",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 500000,
+            "output": 65536
+          }
+        },
+        "gemini-web-argon-thinking": {
+          "modelID": "jgopilot/gemini-4-argon-thinking",
+          "name": "Gemini 4 Argon Thinking",
+          "package": "@opencode/ai/providers/openai-compatible",
+          "capabilities": {
+            "tools": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 500000,
+            "output": 65536
+          }
+        }
+      }
+    }
+  }
+}

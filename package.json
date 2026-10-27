@@ -1,0 +1,12 @@
+{
+  "name": "gemini-opencode",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Archived Gemini Web2API Go integration for OpenCode, with pinned patches and offline tests",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test tests/gemini-go-queue.test.mjs tests/gemini-tool-roundtrip.test.mjs tests/patch-preflight.test.mjs",
+    "test:windows": "node --test tests/gemini-session-launcher.test.mjs tests/gemini-go-web-launcher.test.mjs"
+  }
+}

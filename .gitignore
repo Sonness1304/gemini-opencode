@@ -1,0 +1,16 @@
+node_modules/
+.qa/
+.env
+.env.*
+!.env.example
+*.exe
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.log
+config.json
+opencode.json
+session-status.txt
+data/
+backups/
